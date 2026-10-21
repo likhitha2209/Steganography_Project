@@ -70,7 +70,7 @@ Status open_files(EncodeInfo *encInfo)
     	return e_failure;
     }
 
-    // No failure return e_success
+    // No failure return e_success 
     return e_success;
 }
 
@@ -104,4 +104,11 @@ Status read_and_validate_encode_args(char *argv[], EncodeInfo *encInfo)
 
         open the file in 'w' mode, and store the fptr to th str mem.
         */
+
+    int found = 1;
+    while(found)
+    {
+        found = 0;
+        scanf("");
+    }
 }
