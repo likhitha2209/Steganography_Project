@@ -35,67 +35,11 @@ uint get_image_size_for_bmp(FILE *fptr_image)
  * Output: FILE pointer for above files
  * Return Value: e_success or e_failure, on file errors
  */
-// Status open_files(EncodeInfo *encInfo)
-// {
-//     // Src Image file
-//     encInfo->fptr_src_image = fopen(encInfo->src_image_fname, "r");
-//     // Do Error handling
-//     if (encInfo->fptr_src_image == NULL)
-//     {
-//     	perror("fopen");
-//     	fprintf(stderr, "ERROR: Unable to open file %s\n", encInfo->src_image_fname);
-
-//     	return e_failure;
-//     }
-
-//     // Secret file
-//     encInfo->fptr_secret = fopen(encInfo->secret_fname, "r");
-//     // Do Error handling
-//     if (encInfo->fptr_secret == NULL)
-//     {
-//     	perror("fopen");
-//     	fprintf(stderr, "ERROR: Unable to open file %s\n", encInfo->secret_fname);
-
-//     	return e_failure;
-//     }
-
-//     // Stego Image file
-//     encInfo->fptr_stego_image = fopen(encInfo->stego_image_fname, "w");
-//     // Do Error handling
-//     if (encInfo->fptr_stego_image == NULL)
-//     {
-//     	perror("fopen");
-//     	fprintf(stderr, "ERROR: Unable to open file %s\n", encInfo->stego_image_fname);
-
-//     	return e_failure;
-//     }
-
-//     // No failure return e_success 
-//     return e_success;
-// }
 
 
 Status read_and_validate_encode_args(char *argv[], EncodeInfo *encInfo)
 {
-    /* 
-        ->check the argv[3] is a valid file
-            is the file present or not
-            encInfo->secret_fname=argv[3]
-            if present, store in file pointer 
-                encInfo->fptr_secret = fopen()
-            if not return e_failure
-
-        -> check argv[4] is null or not
-            if not NULL,  
-                encInfo->stego_image_fname=argv[4]
-            if NULL, encInfo->stego_image_fname="default.bmp"
-
-        ->check if the file extensiton if of .bmp 
-        if not return e_failure
-
-        open the file in 'w' mode, and store the fptr to th str mem. 
-    */
-    /*-> check the agrv[2] must be having ".bmp" extn and last 4 char should be ".bmp"
+    /*  check the agrv[2] must be having ".bmp" extn and last 4 char should be ".bmp"
         if yes,store file name into str mem (encInfo->source_image_fname = argv[2])
         if not, return e_failure
     */
@@ -105,7 +49,7 @@ Status read_and_validate_encode_args(char *argv[], EncodeInfo *encInfo)
         printf("Invalid!! The 2nd argument should consists of '.bmp'\n");
         return e_failure;
     }
-    else if(strcmp(argv[2] + strlen(argv[2]) - 4, ".bmp") != 0)
+    else if(strlen(argv[2]) < 4 || strcmp(argv[2] + strlen(argv[2]) - 4, ".bmp") != 0)
     {
         printf("Invalid!! The 2nd argument should end with '.bmp'\n");
         return e_failure;
@@ -113,18 +57,82 @@ Status read_and_validate_encode_args(char *argv[], EncodeInfo *encInfo)
     else
     {
         encInfo->src_image_fname = argv[2];
+        return e_success;
     }
 
-    /*-> check if secret file the file is existing or not 
-            open file in read mode argv[2]
-            encInfo->fptr_src_image=fopen()
-            if file not present return null
+    /*  check if secret file the file is existing or not (open file in read mode argv[2])
+        encInfo->fptr_src_image=fopen()
+        if file not present return null
     */
+    encInfo->fptr_src_image=fopen(argv[2],"r");
+    if(encInfo -> fptr_src_image == NULL)
+    {
+        printf("Invalid!! Source file not present... ");
+        return e_failure;
+    }
 
-    encInfo->secret_fname = argv[3];
+    /*
+        check the argv[3] is a valid file (is the file present or not)
+        encInfo->secret_fname=argv[3]
+        if present, store in file pointer 
+            encInfo->fptr_secret = fopen()
+        if not return e_failure
+    */
+    encInfo -> secret_fname = argv[3];
+    encInfo ->fptr_secret = fopen(argv[3],"r");
+    if(encInfo -> fptr_secret == NULL)
+    {
+        fclose(encInfo -> fptr_src_image);
+        encInfo -> fptr_src_image = NULL;
+        printf("Invalid!! Secret file not present... ");
+        return e_failure;
+    }
 
+    /*
+        check argv[4] is null or not
+        if not NULL,  
+            encInfo->stego_image_fname=argv[4]
+        if NULL, encInfo->stego_image_fname="default.bmp"
+    */
+    if(argv[4] == NULL)
+    {
+        encInfo->stego_image_fname="default.bmp";
+        return e_success;
+    }
+    else
+    {
+    char *dot = strstr(argv[4], ".bmp");
+    if(dot == NULL)
+    {
+        printf("Invalid!! The 4nd argument should consists of '.bmp'\n");
+        return e_failure;
+    }
+    else if(strlen(argv[4]) < 4 || strcmp(argv[4] + strlen(argv[4]) - 4, ".bmp") != 0)
+    {
+        printf("Invalid!! The 4nd argument should end with '.bmp'\n");
+        return e_failure;
+    }
+        encInfo->stego_image_fname=argv[4];
+        return e_success;
+    }
 
+    /*
+        check if the file extensiton is of .bmp 
+        if not return e_failure
+        open the file in 'w' mode, and store the fptr to th str mem. 
+    */
+    encInfo -> fptr_stego_image = fopen(encInfo -> stego_image_fname,"w");
+    if(encInfo -> fptr_stego_image == NULL)
+    {
+        fclose(encInfo -> fptr_src_image);
+        fclose(encInfo -> fptr_secret);
 
+        encInfo ->fptr_src_image = NULL;
+        encInfo -> fptr_secret = NULL;
+
+        return e_failure;
+    }
+    return e_success;
 }
 
 Status do_encoding(EncodeInfo *encInfo)
@@ -156,9 +164,6 @@ Status do_encoding(EncodeInfo *encInfo)
 
         copy_remaining_img_data(ecoInfo -> fptr_src_image,ecoInfo -> fptr_stego_image)== e_failure
         printf error messsage and return e failure
-
-        
-
     */
 }
 
