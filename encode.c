@@ -44,30 +44,34 @@ Status read_and_validate_encode_args(char *argv[], EncodeInfo *encInfo)
         if yes,store file name into str mem (encInfo->source_image_fname = argv[2])
         if not, return e_failure
     */
-    if(strstr(argv[2], ".bmp") == NULL)
+    if(argv[2] == NULL)
     {
-        printf("Invalid!! The 2nd argument should consists of '.bmp'\n");
+        printf("Error: Soure file name not found.\n");
+        return e_failure;
+    }
+    else if(strstr(argv[2], ".bmp") == NULL)
+    {
+        printf("Error: Source image must have a .bmp extension.\n");
         return e_failure;
     }
     else if(strlen(argv[2]) < 4 || strcmp(argv[2] + strlen(argv[2]) - 4, ".bmp") != 0)
     {
-        printf("Invalid!! The 2nd argument should end with '.bmp'\n");
+        printf("Error: Invalid source image name.\n");
         return e_failure;
     }
     else
     {
         encInfo->src_image_fname = argv[2];
-        return e_success;
     }
 
-    /*  check if secret file the file is existing or not (open file in read mode argv[2])
+    /*  check if source file is existing or not (open file in read mode argv[2])
         encInfo->fptr_src_image=fopen()
         if file not present return null
     */
-    encInfo->fptr_src_image=fopen(argv[2],"r");
+    encInfo->fptr_src_image=fopen(argv[2],"rb");
     if(encInfo -> fptr_src_image == NULL)
     {
-        printf("Invalid!! Source file not present... ");
+        printf("Error: Unable to open Source image.\n");
         return e_failure;
     }
 
@@ -78,13 +82,21 @@ Status read_and_validate_encode_args(char *argv[], EncodeInfo *encInfo)
             encInfo->fptr_secret = fopen()
         if not return e_failure
     */
+    if (argv[3] == NULL)
+    {
+        printf("Error: Secret file name not found.\n");
+        fclose(encInfo->fptr_src_image);
+        encInfo->fptr_src_image = NULL;
+        return e_failure;
+    }
+
     encInfo -> secret_fname = argv[3];
-    encInfo ->fptr_secret = fopen(argv[3],"r");
+    encInfo ->fptr_secret = fopen(argv[3],"rb");
     if(encInfo -> fptr_secret == NULL)
     {
         fclose(encInfo -> fptr_src_image);
         encInfo -> fptr_src_image = NULL;
-        printf("Invalid!! Secret file not present... ");
+        printf("Error: Secret file not present.\n");
         return e_failure;
     }
 
@@ -97,23 +109,30 @@ Status read_and_validate_encode_args(char *argv[], EncodeInfo *encInfo)
     if(argv[4] == NULL)
     {
         encInfo->stego_image_fname="default.bmp";
-        return e_success;
     }
-    else
+    else if(strstr(argv[4], ".bmp") == NULL)    
     {
-    char *dot = strstr(argv[4], ".bmp");
-    if(dot == NULL)
-    {
-        printf("Invalid!! The 4nd argument should consists of '.bmp'\n");
+        printf("Error: Output image must have a .bmp extension.\n");
+        fclose(encInfo->fptr_src_image);
+        fclose(encInfo->fptr_secret);
+
+        encInfo->fptr_src_image = NULL;
+        encInfo->fptr_secret = NULL;
         return e_failure;
     }
     else if(strlen(argv[4]) < 4 || strcmp(argv[4] + strlen(argv[4]) - 4, ".bmp") != 0)
     {
-        printf("Invalid!! The 4nd argument should end with '.bmp'\n");
+        printf("Error: Invalid output image name.\n");
+        fclose(encInfo->fptr_src_image);
+        fclose(encInfo->fptr_secret);
+
+        encInfo->fptr_src_image = NULL;
+        encInfo->fptr_secret = NULL;
         return e_failure;
     }
+    else
+    {
         encInfo->stego_image_fname=argv[4];
-        return e_success;
     }
 
     /*
@@ -121,7 +140,7 @@ Status read_and_validate_encode_args(char *argv[], EncodeInfo *encInfo)
         if not return e_failure
         open the file in 'w' mode, and store the fptr to th str mem. 
     */
-    encInfo -> fptr_stego_image = fopen(encInfo -> stego_image_fname,"w");
+    encInfo -> fptr_stego_image = fopen(encInfo -> stego_image_fname,"wb");
     if(encInfo -> fptr_stego_image == NULL)
     {
         fclose(encInfo -> fptr_src_image);
@@ -129,7 +148,7 @@ Status read_and_validate_encode_args(char *argv[], EncodeInfo *encInfo)
 
         encInfo ->fptr_src_image = NULL;
         encInfo -> fptr_secret = NULL;
-
+        printf("Error: Unable to create output image file.\n");
         return e_failure;
     }
     return e_success;
@@ -143,7 +162,7 @@ Status do_encoding(EncodeInfo *encInfo)
     */
     if(check_capacity(encInfo) == e_failure)
     {
-        printf("");
+        printf("Error: Insufficient capacity in source image to encode secret file.\n");
         return e_failure;
     }
 
@@ -153,7 +172,7 @@ Status do_encoding(EncodeInfo *encInfo)
     */
     if(copy_bmp_header(encInfo -> fptr_src_image , encInfo -> fptr_stego_image) == e_failure)
     {
-        printf("");
+        printf("Error: Failed to copy BMP header to output image.\n");
         return e_failure;
     }
 
@@ -164,7 +183,7 @@ Status do_encoding(EncodeInfo *encInfo)
     //char *str = MAGIC_STRING;
     if(encode_magic_string(MAGIC_STRING,encInfo) == e_failure)
     {
-        printf("");
+        printf("Error: Failed to encode magic string.\n");
         return e_failure;
     }
 
@@ -175,11 +194,17 @@ Status do_encoding(EncodeInfo *encInfo)
         printf error messsage and return e failure
     */
 
-    char *dot = strchr(argv[3],'.');
+    char *dot = strrchr(encInfo -> secret_fname,'.');
+    if (dot == NULL)
+    {
+        printf("Error: Secret file extension not found.\n");
+        return e_failure;
+    }
     strcpy(encInfo->extn_secret_file,dot);
+
     if(encode_secret_file_extn_size(strlen(encInfo->extn_secret_file), encInfo) == e_failure)
     {
-        printf("");
+        printf("Error: Failed to encode secret file extension size.\n");
         return e_failure;
     }
 
@@ -189,37 +214,16 @@ Status do_encoding(EncodeInfo *encInfo)
     */
     if(encode_secret_file_extn( encInfo->extn_secret_file,encInfo) == e_failure)
     {
-        printf("");
+        printf("Error: Failed to encode secret file extension.\n");
         return e_failure;
     }
-
-    /*
-        encode_secret_file_extn( encInfo->extn_secret_file,encInfo) == e_failure
-        printf error messsage and return e failure
-    */
-    if(encode_secret_file_extn( encInfo->extn_secret_file,encInfo) == e_failure)
-    {
-        printf("");
-        return e_failure;
-    }
-
-    /*
-        encode_secret_file_extn( encInfo->extn_secret_file,encInfo) == e_failure
-        printf error messsage and return e failure
-    */
-    if(encode_secret_file_extn( encInfo->extn_secret_file,encInfo) == e_failure)
-    {
-        printf("");
-        return e_failure;
-    }
-
     /*
         encode_secret_file_size(encInfo->size_secret_file,encInfo)== e_failure
         printf error messsage and return e failure
     */
     if(encode_secret_file_size(encInfo->size_secret_file,encInfo)== e_failure)
     {
-        printf("");
+        printf("Error: Failed to encode secret file size.\n");
         return e_failure;
     }
 
@@ -229,7 +233,7 @@ Status do_encoding(EncodeInfo *encInfo)
     */
     if(encode_secret_file_data(encInfo)== e_failure)
     {
-        printf("");
+        printf("Error: Failed to encode secret file data.\n");
         return e_failure;
     }
 
@@ -239,9 +243,10 @@ Status do_encoding(EncodeInfo *encInfo)
     */
     if(copy_remaining_img_data(encInfo -> fptr_src_image, encInfo -> fptr_stego_image)== e_failure)
     {
-        printf("");
+        printf("Error: Failed to copy remaining image data to output image.\n");
         return e_failure;
     }
+    return e_success;
 
 }
 
