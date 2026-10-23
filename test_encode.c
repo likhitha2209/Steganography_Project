@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
         //start operation
         read_and_validate_encode_args(argv, &encInfo)
     */
-   check_operation_type(argv[1][1] == e_encode);
+   if(check_operation_type(argv[1][1]) == e_encode);
    {
         read_and_validate_encode_args(argv, &encInfo);
    }

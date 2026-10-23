@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "encode.h"
 #include "types.h"
+#include "common.h"
 
 /* Function Definitions */
 
@@ -43,8 +44,7 @@ Status read_and_validate_encode_args(char *argv[], EncodeInfo *encInfo)
         if yes,store file name into str mem (encInfo->source_image_fname = argv[2])
         if not, return e_failure
     */
-    char *dot = strstr(argv[2], ".bmp");
-    if(dot == NULL)
+    if(strstr(argv[2], ".bmp") == NULL)
     {
         printf("Invalid!! The 2nd argument should consists of '.bmp'\n");
         return e_failure;
@@ -138,33 +138,111 @@ Status read_and_validate_encode_args(char *argv[], EncodeInfo *encInfo)
 Status do_encoding(EncodeInfo *encInfo)
 {
     /*
-        check_capacity(encInfo) == e_success
+        check_capacity(encInfo) == e_failure
         print error msg and retun e_failure
+    */
+    if(check_capacity(encInfo) == e_failure)
+    {
+        printf("");
+        return e_failure;
+    }
 
+    /*
         copy_bmp_header(ecoInfo -> fptr_src_image,ecoInfo -> fptr_stego_image) == failure
         printf error messsage and return e failure
+    */
+    if(copy_bmp_header(encInfo -> fptr_src_image , encInfo -> fptr_stego_image) == e_failure)
+    {
+        printf("");
+        return e_failure;
+    }
 
+    /*
         encode_magic_string(MAGIC_STRING,encInfo)== e_failure
         printf error messsage and return e failure
+    */
+    //char *str = MAGIC_STRING;
+    if(encode_magic_string(MAGIC_STRING,encInfo) == e_failure)
+    {
+        printf("");
+        return e_failure;
+    }
 
+    /*
         char *dot = strchr(argv[3],'.')
         strcpy(encInfo->extn_secret_file,dot)
         encode_secret_file_extn_size(strlen(encInfo->extn_secret_file), encInfo)== e_failure
         printf error messsage and return e failure
+    */
 
+    char *dot = strchr(argv[3],'.');
+    strcpy(encInfo->extn_secret_file,dot);
+    if(encode_secret_file_extn_size(strlen(encInfo->extn_secret_file), encInfo) == e_failure)
+    {
+        printf("");
+        return e_failure;
+    }
 
+    /*
         encode_secret_file_extn( encInfo->extn_secret_file,encInfo) == e_failure
         printf error messsage and return e failure
+    */
+    if(encode_secret_file_extn( encInfo->extn_secret_file,encInfo) == e_failure)
+    {
+        printf("");
+        return e_failure;
+    }
 
+    /*
+        encode_secret_file_extn( encInfo->extn_secret_file,encInfo) == e_failure
+        printf error messsage and return e failure
+    */
+    if(encode_secret_file_extn( encInfo->extn_secret_file,encInfo) == e_failure)
+    {
+        printf("");
+        return e_failure;
+    }
+
+    /*
+        encode_secret_file_extn( encInfo->extn_secret_file,encInfo) == e_failure
+        printf error messsage and return e failure
+    */
+    if(encode_secret_file_extn( encInfo->extn_secret_file,encInfo) == e_failure)
+    {
+        printf("");
+        return e_failure;
+    }
+
+    /*
         encode_secret_file_size(encInfo->size_secret_file,encInfo)== e_failure
         printf error messsage and return e failure
+    */
+    if(encode_secret_file_size(encInfo->size_secret_file,encInfo)== e_failure)
+    {
+        printf("");
+        return e_failure;
+    }
 
+    /*
         encode_secret_file_data(encInfo)== e_failure
         printf error messsage and return e failure
+    */
+    if(encode_secret_file_data(encInfo)== e_failure)
+    {
+        printf("");
+        return e_failure;
+    }
 
+    /*
         copy_remaining_img_data(ecoInfo -> fptr_src_image,ecoInfo -> fptr_stego_image)== e_failure
         printf error messsage and return e failure
     */
+    if(copy_remaining_img_data(encInfo -> fptr_src_image, encInfo -> fptr_stego_image)== e_failure)
+    {
+        printf("");
+        return e_failure;
+    }
+
 }
 
 Status check_capacity(EncodeInfo *encInfo)
