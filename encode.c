@@ -2,6 +2,7 @@
 #include "encode.h"
 #include "types.h"
 #include "common.h"
+#include <string.h>
 
 /* Function Definitions */
 
@@ -165,7 +166,7 @@ Status do_encoding(EncodeInfo *encInfo)
         printf("Error: Insufficient capacity in source image to encode secret file.\n");
         return e_failure;
     }
-
+    rewind(encInfo->fptr_secret);
     /*
         copy_bmp_header(ecoInfo -> fptr_src_image,ecoInfo -> fptr_stego_image) == failure
         printf error messsage and return e failure
@@ -307,10 +308,10 @@ Status encode_magic_string(const char *magic_string, EncodeInfo *encInfo)
     /* read 8 bytes from src_image into buff */
     /* encode_byte_to_lsb(magic_string[index],buff) */
     /* write 8 bytes of encodded data from buff to dest_image */
-    int i;
+    long i;
     for(i = 0; i < strlen(magic_string); i++)
     {
-        fread(buff,8,1,encInfo->src_image_fname);
+        fread(buff,8,1,encInfo->fptr_src_image);
         encode_byte_to_lsb(magic_string[i],buff);
         fwrite(buff,8,1,encInfo->fptr_stego_image);
     }
@@ -395,7 +396,7 @@ Status encode_secret_file_extn(const char *file_extn, EncodeInfo *encInfo)
     /* read 8 bytes from src_image into buff */
     /* encode_byte_to_lsb(file_extn[index],buff) */
     /* write 8 bytes of encodded data from buff to dest_image */
-    int i;
+    long i;
     for(i=0;i< strlen(file_extn);i++)
     {
         fread(buff,8,1,encInfo ->fptr_src_image);
@@ -426,31 +427,34 @@ Status encode_secret_file_size(long file_size, EncodeInfo *encInfo)
     return e_success;
 }
 
+
 Status encode_secret_file_data(EncodeInfo *encInfo)
 {
     /* declare buff of 8 bytes char buff[8], data */
+//     char buff[8];
+//     char data;
+
+//     /* loop for length of secret_file_size[index] times */
+//     /* read 8 bytes from secret into buff */
+//     /* read char from secret_file data */
+//     /* encode_byte_to_lsb(data,buff) */
+//     /* write 8 bytes of encodded data from buff to dest_image */
     char buff[8];
-    char data;
-
-    /* loop for length of secret_file_size[index] times */
-    /* read 8 bytes from secret into buff */
-    /* read char from secret_file data */
-    /* encode_byte_to_lsb(data,buff) */
-    /* write 8 bytes of encodded data from buff to dest_image */
     int i;
-    if(data == EOF)
+
+    for (i = 0; i < encInfo->size_secret_file; i++)
     {
-        return e_failure;
-    }
-    for(i=0;i<encInfo->size_secret_file;i++)
-    {
-        fread(buff,8,1,encInfo->fptr_secret);
-        data = fgetc(encInfo->fptr_secret);
-        encode_byte_to_lsb(data,buff);
-        fwrite(buff,8,1,encInfo->fptr_stego_image);
+        int ch = fgetc(encInfo->fptr_secret);
+        if (ch == EOF)
+        {
+            printf("Invalid!!! Secret file EOF at byte %d\n", i);
+            return e_failure;
+        }
+        fread(buff, 1, 8, encInfo->fptr_src_image);
+        encode_byte_to_lsb((char)ch, buff);
+        fwrite(buff, 1, 8, encInfo->fptr_stego_image);
     }
 
-    /* return e_success*/
     return e_success;
 }
 
