@@ -259,7 +259,7 @@ Status check_capacity(EncodeInfo *encInfo)
         return e_failure
     */
     encInfo -> size_secret_file = get_file_size(encInfo -> fptr_secret);
-    if(get_image_size_for_bmp(encInfo -> fptr_src_image) > (encInfo -> size_secret_file +14)*8 )
+    if(get_image_size_for_bmp(encInfo -> fptr_src_image) > (get_file_size(encInfo -> fptr_secret) +14)*8 )
     {
         return e_success;
     }
@@ -290,65 +290,76 @@ Status copy_bmp_header(FILE *fptr_src_image, FILE *fptr_dest_image)
     char buff[54];
 
     /* read 54bytes from src image to buff(use fread) */
-    if(fread(buff,54,1,fptr_src_image) != 54)
-    {
-        printf("Error: Couldn't read bmp header!!!");
-        return e_failure;
-    }
+    fread(buff,54,1,fptr_src_image);
 
     /* write 54 bytes from buff to dest image(use fwrite) */
-    if(fwrite(buff,54,1,fptr_dest_image) != 54)
-    {
-        printf("Error : Couldn't write bmp header!!!");
-        return e_failure;
-    }
+    fwrite(buff,54,1,fptr_dest_image);
 
     return e_success;
 }
 
 Status encode_magic_string(const char *magic_string, EncodeInfo *encInfo)
 {
-    /*
-        
-
-        to perfrom 2 bytes loop for length of magic string[index] times
-        read 8 bytes from src_image into buff
-        encode_byte_to_lsb(magic_string[index],buff)
-        write 8 bytes of encodded data from buff to dest_image
-
-        return e_success
-    */
     /* declare buff of 8 bytes */
     char buff[8];
-    
+
+    /* loop for length of magic string[index] times */
+    /* read 8 bytes from src_image into buff */
+    /* encode_byte_to_lsb(magic_string[index],buff) */
+    /* write 8 bytes of encodded data from buff to dest_image */
+    int i;
+    for(i = 0; i < strlen(magic_string); i++)
+    {
+        fread(buff,8,1,encInfo->src_image_fname);
+        encode_byte_to_lsb(magic_string[i],buff);
+        fwrite(buff,8,1,encInfo->fptr_stego_image);
+    }
+
+    /* return e_success*/
+    return e_success;
 }
 
 Status encode_byte_to_lsb(char data, char *image_buffer)
 {
-    /*
-        loop for 8 times in seq manner
-        check nth bit is set or not 
-        if set, 
-            set lsb of image_buffer[]
-        if clear,
-            clear lsb of image_buffer[]
-        return e_success
+    /* loop for 8 times in seq manner */
+    /* check nth bit is set or not */
+    /* if set, set lsb of image_buffer[]*/
+    /* if clear, clear lsb of image_buffer[]*/
+    int i, mask=1,get,clear,set;
+    for(i = 0; i < 8; i++)
+    {
+        mask=1 << (7 - i);
+        if(data & mask)
+        {
+            image_buffer[i] = image_buffer[i] | 1;
+        }
+        else
+        {
+            image_buffer[i] = image_buffer[i] & (~1);
+        }
 
-        
-    */
+    }
+
+    /* return e_success*/
+    return e_success;
 }
 
 Status encode_secret_file_extn_size(uint size, EncodeInfo *encInfo)
 {
-    /*
-        declar buff of 32 bytes
+    /* declar buff of 32 bytes */
+    char buff[32];
 
+    /* read 32 bytes from src_image */
+    fread(buff,32,1,encInfo->fptr_src_image);
 
-        read 32 bytes from src_image
-        encode_size_to_lsb(size,buff)
-        write buff to dest image
-        return e_success
-    */
+    /* encode_size_to_lsb(size,buff) */
+    encode_size_to_lsb(size,buff);
+
+    /* write buff to dest image */
+    fwrite(buff,32,1,encInfo->fptr_stego_image);
+
+    /* return e_success*/
+    return e_success;
 }
 
 Status encode_size_to_lsb(uint size, char *image_buffer)
