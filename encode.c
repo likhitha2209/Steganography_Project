@@ -323,9 +323,9 @@ Status encode_byte_to_lsb(char data, char *image_buffer)
 {
     /* loop for 8 times in seq manner */
     /* check nth bit is set or not */
-    /* if set, set lsb of image_buffer[]*/
-    /* if clear, clear lsb of image_buffer[]*/
-    int i, mask=1,get,clear,set;
+    /* if set, set lsb of image_buffer[] */
+    /* if clear, clear lsb of image_buffer[] */
+    int i, mask=1;
     for(i = 0; i < 8; i++)
     {
         mask=1 << (7 - i);
@@ -364,59 +364,94 @@ Status encode_secret_file_extn_size(uint size, EncodeInfo *encInfo)
 
 Status encode_size_to_lsb(uint size, char *image_buffer)
 {
-    /*
-        loop for 32 times in seq manner
-        check nth bit is set or not 
-        if set, 
-            set lsb of image_buffer[]
-        if clear,
-            clear lsb of image_buffer[]
-        return e_success
+    /* loop for 32 times in seq manner */
+    /* check nth bit is set or not */
+    /* if set, set lsb of image_buffer[] */
+    /* if clear, clear lsb of image_buffer[] */
+    int i,mask=1;
+    for(i=0;i<32;i++)
+    {
+        mask = 1<<(31 - i);
+        if(size & mask)
+        {
+            image_buffer[i] = image_buffer[i] | 1;
+        }
+        else
+        {
+            image_buffer[i] = image_buffer[i] & (~1);
+        }
+    }
 
-        
-    */
+    /* return e_success*/
+    return e_success;    
 }
 
 Status encode_secret_file_extn(const char *file_extn, EncodeInfo *encInfo)
 {
-    /*
-        declare buff of 8 bytes
+    /* declare buff of 8 bytes */
+    char buff[8];
 
-        to perfrom 2 bytes loop for length of file_extn[index] times
-        read 8 bytes from src_image into buff
-        encode_byte_to_lsb(file_extn[index],buff)
-        write 8 bytes of encodded data from buff to dest_image
+    /* loop for length of file_extn[index] times */
+    /* read 8 bytes from src_image into buff */
+    /* encode_byte_to_lsb(file_extn[index],buff) */
+    /* write 8 bytes of encodded data from buff to dest_image */
+    int i;
+    for(i=0;i< strlen(file_extn);i++)
+    {
+        fread(buff,8,1,encInfo ->fptr_src_image);
+        encode_byte_to_lsb(file_extn[i],buff);
+        fwrite(buff,8,1,encInfo->fptr_stego_image);
 
-        return e_success
-    */
+    }
+
+    /* return e_success*/
+    return e_success;
 }
 
 Status encode_secret_file_size(long file_size, EncodeInfo *encInfo)
 {
-    /*
-        declar buff of 32 bytes
+    /* declar buff of 32 bytes */
+    char buff[32];
 
+    /* read 32 bytes from src_image */
+    fread(buff,32,1,encInfo -> fptr_src_image);
 
-        read 32 bytes from src_image
-        encode_size_to_lsb(size,buff)
-        write buff to dest image
-        return e_success
-    */
+    /* encode_size_to_lsb(size,buff) */
+    encode_size_to_lsb(file_size,buff);
+
+    /* write buff to dest image */
+    fwrite(buff,32,1,encInfo ->fptr_stego_image);
+    
+    /* return e_success*/
+    return e_success;
 }
 
 Status encode_secret_file_data(EncodeInfo *encInfo)
 {
-    /*
-        declare buff of 8 bytes char buff[8], data;
+    /* declare buff of 8 bytes char buff[8], data */
+    char buff[8];
+    char data;
 
-        to perfrom 2 bytes loop for length of secret_file_size[index] times
-        read 8 bytes from secret into buff
-        read char from secret_file data
-        encode_byte_to_lsb(data,buff)
-        write 8 bytes of encodded data from buff to dest_image
+    /* loop for length of secret_file_size[index] times */
+    /* read 8 bytes from secret into buff */
+    /* read char from secret_file data */
+    /* encode_byte_to_lsb(data,buff) */
+    /* write 8 bytes of encodded data from buff to dest_image */
+    int i;
+    if(data == EOF)
+    {
+        return e_failure;
+    }
+    for(i=0;i<encInfo->size_secret_file;i++)
+    {
+        fread(buff,8,1,encInfo->fptr_secret);
+        data = fgetc(encInfo->fptr_secret);
+        encode_byte_to_lsb(data,buff);
+        fwrite(buff,8,1,encInfo->fptr_stego_image);
+    }
 
-        return e_success
-    */
+    /* return e_success*/
+    return e_success;
 }
 
 Status copy_remaining_img_data(FILE *fptr_src, FILE *fptr_dest)
@@ -425,4 +460,19 @@ Status copy_remaining_img_data(FILE *fptr_src, FILE *fptr_dest)
         run loop for till EOF
         get/read 1 byte from src img and write to dset image
     */
+    char ch;
+    while ((ch = fgetc(fptr_src)) != EOF)
+    {
+        if (fputc(ch, fptr_dest) == EOF)
+        {
+            return e_failure;
+        }
+    }
+    if (ferror(fptr_src))
+    {
+        return e_failure;
+    }
+
+    /* return e_success*/
+    return e_success;
 }
