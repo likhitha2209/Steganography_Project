@@ -253,33 +253,63 @@ Status do_encoding(EncodeInfo *encInfo)
 Status check_capacity(EncodeInfo *encInfo)
 {
     /*
-
-
-    
+        encoIncFo ->size_secret_file = get_file_size(encoInfo -> fptr_secret)
+        get_image_size_for_bmp(encoInfo -> fptr_src_image) > (14*8) 
+            return e_success
+        return e_failure
     */
+    encInfo -> size_secret_file = get_file_size(encInfo -> fptr_secret);
+    if(get_image_size_for_bmp(encInfo -> fptr_src_image) > (encInfo -> size_secret_file +14)*8 )
+    {
+        return e_success;
+    }
+    else
+    {
+        return e_failure;
+    }
+
 }
 
 uint get_file_size(FILE *fptr)
 {
     /*
-        
+        fseek() to SEEK_END
+        return ftell()
     */
+    fseek(fptr,0,SEEK_END);
+    return ftell(fptr);
 }
 
 Status copy_bmp_header(FILE *fptr_src_image, FILE *fptr_dest_image)
 {
-    /*
-        rewind(),src imae and sct image
-        declare a buff of 54 bytes, char buff[54]
-        read 54bytes from src image to buff(use fread)
-        write 54 bytes from buff to dest image(use fwrite)
-    */
+   /* rewind(),src imae and sct image */
+    rewind(fptr_src_image);
+    rewind(fptr_dest_image);
+
+    /* declare a buff of 54 bytes, char buff[54] */
+    char buff[54];
+
+    /* read 54bytes from src image to buff(use fread) */
+    if(fread(buff,54,1,fptr_src_image) != 54)
+    {
+        printf("Error: Couldn't read bmp header!!!");
+        return e_failure;
+    }
+
+    /* write 54 bytes from buff to dest image(use fwrite) */
+    if(fwrite(buff,54,1,fptr_dest_image) != 54)
+    {
+        printf("Error : Couldn't write bmp header!!!");
+        return e_failure;
+    }
+
+    return e_success;
 }
 
 Status encode_magic_string(const char *magic_string, EncodeInfo *encInfo)
 {
     /*
-        declare buff of 8 bytes
+        
 
         to perfrom 2 bytes loop for length of magic string[index] times
         read 8 bytes from src_image into buff
@@ -288,6 +318,9 @@ Status encode_magic_string(const char *magic_string, EncodeInfo *encInfo)
 
         return e_success
     */
+    /* declare buff of 8 bytes */
+    char buff[8];
+    
 }
 
 Status encode_byte_to_lsb(char data, char *image_buffer)
