@@ -36,6 +36,14 @@ int main(int argc, char *argv[])
             return 1;
         }
    }
+   else if(check_operation_type(argv[1][1]) == e_decode)
+   {
+
+   }
+   else
+   {
+    
+   }
     return 0;
 }
 
