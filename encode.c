@@ -465,16 +465,12 @@ Status copy_remaining_img_data(FILE *fptr_src, FILE *fptr_dest)
         get/read 1 byte from src img and write to dset image
     */
     char ch;
-    while ((ch = fgetc(fptr_src)) != EOF)
+    while (fread(&ch, 1, 1, fptr_src) == 1)
     {
-        if (fputc(ch, fptr_dest) == EOF)
+        if (fwrite(&ch, 1, 1, fptr_dest) != 1)
         {
             return e_failure;
         }
-    }
-    if (ferror(fptr_src))
-    {
-        return e_failure;
     }
 
     /* return e_success*/
