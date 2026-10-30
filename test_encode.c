@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include "encode.h"
 #include "types.h"
+#include "decode.h"
 
 int main(int argc, char *argv[])
 {
     EncodeInfo encInfo;
-
+    DecodeInfo decInfo;
     /* call check_operation_type(argv[1][1]== e_encode)
         //start operation
         read_and_validate_encode_args(argv, &encInfo)
@@ -16,7 +17,7 @@ int main(int argc, char *argv[])
         {
             printf("Invalid Input!!!\n");
             printf("Use: ./a.out -e source.bmp secret.txt\n");
-            return 1;
+            return 0;
         }
         if(read_and_validate_encode_args(argv, &encInfo) == e_success)
         {
@@ -27,13 +28,11 @@ int main(int argc, char *argv[])
             else
             {
                 printf("Invalid!!! Encoding failed!!!\n");
-                return 1;
             }
         }
         else
         {
             printf("Invalid encoding arguments.\n");
-            return 1;
         }
    }
    else if(check_operation_type(argv[1][1]) == e_decode)
