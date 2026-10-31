@@ -14,10 +14,10 @@ typedef struct _DecodeInfo
     FILE *fptr_steg_img;  
 
     /* Secret File Info */
-    char output_img_fname[50];  
-    FILE *fptr_output_img;   
-    char extn_output_img_file[MAX_FILE_SUFFIX]; 
-    long size_output_img_file;
+    char output_fname[50];  
+    FILE *fptr_output;   
+    char extn_output_file[MAX_FILE_SUFFIX]; 
+    long size_output_file;
 } DecodeInfo;
 
 
@@ -42,7 +42,7 @@ Status decode_secret_file_extn_size(DecodeInfo *decInfo);
 Status decode_secret_file_extn(DecodeInfo *decInfo);
 
 /* Decode secret file size */
-Status decode_secret_file_size(long file_size, DecodeInfo *decInfo);
+Status decode_secret_file_size(DecodeInfo *decInfo);
 
 /* Decode secret file data*/
 Status decode_secret_file_data(DecodeInfo *decInfo);
