@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
         }
         if(read_and_validate_decode_args(argv, &decInfo) == e_success)
         {
-            if (do_decoding(&decInfo) == e_success)
+            if (do_decoding(argv,&decInfo) == e_success)
             {
                 printf("Decoding completed successfully!!!\n");
             }
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
    }
    else
    {
-        printf("Invalid input!!!... \nEntered operation type is invalid.\n");
+        printf("Invalid input!!!... \nEntered arguments are invalid!\n");
    }
     return 0;
 }
@@ -90,7 +90,6 @@ OperationType check_operation_type(char opt)
    else
    {
         printf("Invalid Input!!!\n");
-
         return e_unsupported;
    }
 }

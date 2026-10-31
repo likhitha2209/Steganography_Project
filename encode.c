@@ -41,6 +41,9 @@ uint get_image_size_for_bmp(FILE *fptr_image)
 
 Status read_and_validate_encode_args(char *argv[], EncodeInfo *encInfo)
 {
+
+    printf("validating the encoding arguments!!!\n");
+
     /*  check the agrv[2] must be having ".bmp" extn and last 4 char should be ".bmp"
         if yes,store file name into str mem (encInfo->source_image_fname = argv[2])
         if not, return e_failure
@@ -70,6 +73,7 @@ Status read_and_validate_encode_args(char *argv[], EncodeInfo *encInfo)
         if file not present return null
     */
     encInfo->fptr_src_image=fopen(argv[2],"rb");
+
     if(encInfo -> fptr_src_image == NULL)
     {
         printf("Error -> Unable to open Source image.\n");
@@ -109,6 +113,7 @@ Status read_and_validate_encode_args(char *argv[], EncodeInfo *encInfo)
     */
     if(argv[4] == NULL)
     {
+        printf("output file name not found. so it's assigned as default.bmp'\n");
         encInfo->stego_image_fname="default.bmp";
     }
     else if(strstr(argv[4], ".bmp") == NULL)    
@@ -152,11 +157,17 @@ Status read_and_validate_encode_args(char *argv[], EncodeInfo *encInfo)
         printf("Error -> Unable to create output image file.\n");
         return e_failure;
     }
+
+    printf("Arguments validation completed!!!");
+
     return e_success;
 }
 
 Status do_encoding(EncodeInfo *encInfo)
 {
+
+    printf("ENCODING STARTED...\n");
+
     /*
         check_capacity(encInfo) == e_failure
         print error msg and retun e_failure
@@ -338,8 +349,6 @@ Status encode_magic_string(const char *magic_string, EncodeInfo *encInfo)
 
 Status encode_byte_to_lsb(char data, char *image_buffer)
 {
-    printf("--------------- Encoding Byte to LSB ---------------\n");
-
     /* loop for 8 times in seq manner */
     /* check nth bit is set or not */
     /* if set, set lsb of image_buffer[] */
@@ -359,7 +368,6 @@ Status encode_byte_to_lsb(char data, char *image_buffer)
 
     }
 
-    printf("Byte encoded successfully!\n");
 
     /* return e_success*/
     return e_success;
@@ -388,7 +396,6 @@ Status encode_secret_file_extn_size(uint size, EncodeInfo *encInfo)
 
 Status encode_size_to_lsb(uint size, char *image_buffer)
 {
-    printf("--------------- Encoding Size to LSB ---------------\n");
 
     /* loop for 32 times in seq manner */
     /* check nth bit is set or not */
@@ -407,8 +414,6 @@ Status encode_size_to_lsb(uint size, char *image_buffer)
             image_buffer[i] = image_buffer[i] & (~1);
         }
     }
-
-    printf("Size encoded successfully!\n");
 
     /* return e_success*/
     return e_success;    
